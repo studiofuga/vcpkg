@@ -32,7 +32,8 @@
 ## * [libpng](https://github.com/Microsoft/vcpkg/blob/master/ports/libpng/portfile.cmake)
 
 function(vcpkg_apply_patches)
-    cmake_parse_arguments(_ap "QUIET" "SOURCE_PATH" "PATCHES" ${ARGN})
+    set(options REQUIRED QUIET)
+    cmake_parse_arguments(_ap "${options}" "SOURCE_PATH" "PATCHES" ${ARGN})
 
     find_program(GIT NAMES git git.cmd)
     set(PATCHNUM 0)
@@ -48,8 +49,14 @@ function(vcpkg_apply_patches)
             RESULT_VARIABLE error_code
         )
 
-        if(error_code AND NOT _ap_QUIET)
-            message(STATUS "Applying patch failed. This is expected if this patch was previously applied.")
+        if(error_code)
+            if (NOT _ap_REQUIRED)
+                if (NOT _ap_QUIET)
+                    message(STATUS "Applying patch failed. This is expected if this patch was previously applied.")
+                endif()
+            else()
+                    message(FATAL_ERROR "Applying patch failed.")
+            endif()        
         endif()
 
         math(EXPR PATCHNUM "${PATCHNUM}+1")
